@@ -15,13 +15,14 @@
     <script src="js/chess.min.js"></script>
 </head>
 <body style="text-align: center;">
+    <script src="script.js"></script>
     <h1 id="heading"><span id="color">⚪️</span><span id="name"></span><span id="status">❓</span></h1>
     <div id="board" style="width: 600px; margin: auto;"></div>
     <div id="stats" style="font-size: larger;">
-      <p id="pgn"></p>
+      <p id="pgn-block"><span id="pgn"></span><span id="next" style="cursor: pointer" onclick="resetState()"></span></p>
       <p><b>Wins:</b> <span id="wins">0</span><br><b>Attempts:</b> <span id="tries">0</span></p>
       <p><a id="share" href="/">Share (copy link)</a></p>
     </div>
-    <script src="script.js"></script>
+    
 </body>
 </html>
