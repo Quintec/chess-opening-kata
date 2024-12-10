@@ -22,7 +22,10 @@ window.onload = async() => {
 
         for (let i = 0; i < openingData.length; i++) {
             let opening = openingData[i];
-            openingDict[opening[0]] = opening;
+            if (openingDict[opening[0]] === undefined) {
+                openingDict[opening[0]] = [];
+            }
+            openingDict[opening[0]].push(opening);
         }
     }
 
@@ -30,7 +33,6 @@ window.onload = async() => {
         await parseOpeningTsv(name);
     }
 
-    // read tries and wins from local storage
     let triesStr = localStorage.getItem("tries");
     if (triesStr !== null) {
         tries = parseInt(triesStr);
@@ -57,7 +59,7 @@ window.onload = async() => {
         url.searchParams.set("eco", eco);
         document.getElementById("share").href = url.href;
 
-        opening = openingDict[eco];
+        opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
         moves = PgnParser.parse(opening[2])[0].moves;
 
         document.getElementById("color").innerHTML = "⚪️";
@@ -73,7 +75,7 @@ window.onload = async() => {
             promotion: 'q'
         });
         if (move === null) return 'snapback';
-        let pass = makeCorrectMove();
+        let pass = makeCorrectMove(piece, target);
         if (!pass) {
             game.undo();
             reset = true;
@@ -116,17 +118,24 @@ window.onload = async() => {
         localStorage.setItem("tries", tries);
         localStorage.setItem("wins", wins);
     }
-    
-    function makeCorrectMove() {
-        let move = moves.shift();
-        let move_obj = model_game.move(move.notation.notation);
-        if (move_obj === null) {
-            console.log("Invalid correct move: " + move.notation.notation);
-            return;
+
+    function moveDataToStr(fig, pos) {
+        if (fig[1] === 'P') {
+            return pos;
+        } else {
+            return fig[1] + pos;
         }
-        if (model_game.fen() !== game.fen()) {
-            model_game.undo();
-            moves.unshift(move);
+    }
+    
+    function makeCorrectMove(piece, newPos) {
+        console.log(moves);
+        let currLen = moves.length;
+        moves = moves.filter((move) => {
+            let moveData = moveDataToStr(piece, newPos);
+            return !(move.notation.notation === moveData && move.turn == piece[0].toLowerCase());
+        });
+
+        if (currLen === moves.length) {
             return false;
         }
 
