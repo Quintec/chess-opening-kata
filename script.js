@@ -7,6 +7,10 @@ let openingDict = {};
 let reset = false;
 let win = false;
 
+let tries = 0;
+let wins = 0;
+let whiteMove = true;
+
 window.onload = async() => {
     async function parseOpeningTsv(fileName) {
         let tsv = await fetch("./data/" + fileName)
@@ -26,17 +30,40 @@ window.onload = async() => {
         await parseOpeningTsv(name);
     }
 
-    function resetState() {
+    // read tries and wins from local storage
+    let triesStr = localStorage.getItem("tries");
+    if (triesStr !== null) {
+        tries = parseInt(triesStr);
+    }
+    let winsStr = localStorage.getItem("wins");
+    if (winsStr !== null) {
+        wins = parseInt(winsStr);
+    }
+
+    function resetState(q_eco) {
         reset = false;
         win = false;
+        whiteMove = true;
         game.reset();
         model_game.reset();
         board.start();
-        let ecos = Object.keys(openingDict);
-        let eco = ecos[Math.floor(Math.random() * ecos.length)];
+        let eco = q_eco || null;
+        if (eco === null) {
+            let ecos = Object.keys(openingDict);
+            eco = ecos[Math.floor(Math.random() * ecos.length)];
+        }
+
+        let url = new URL(window.location.href);
+        url.searchParams.set("eco", eco);
+        document.getElementById("share").href = url.href;
+
         opening = openingDict[eco];
         moves = PgnParser.parse(opening[2])[0].moves;
+
+        document.getElementById("color").innerHTML = "⚪️";
         document.getElementById("name").innerHTML = opening[0] + ": " + opening[1];
+        document.getElementById("status").innerHTML = "❓";
+        document.getElementById("pgn").innerHTML = "";
     }
 
     function onDrop(source, target, piece, newPos, oldPos, orientation) {
@@ -56,16 +83,38 @@ window.onload = async() => {
     
     function onSnapEnd() {
         board.position(game.fen());
+        document.getElementById("color").innerHTML = whiteMove ? "⚫️" : "⚪️";
+        whiteMove = !whiteMove;
+
+        document.getElementById("pgn").innerHTML = game.pgn();
+
         if (win) {
-            alert("You win!");
-            resetState();
+            document.getElementById("status").innerHTML = "✅";
+            wins++;
+            tries++;
+            updateStats();
+            setTimeout(() => {
+                resetState();
+            }, 370);
         }
     }
 
     function onSnapbackEnd() {
         if (reset) {
-            resetState();
+            document.getElementById("status").innerHTML = "❌";
+            tries++;
+            updateStats();
+            setTimeout(() => {
+                resetState();
+            }, 370);
         }
+    }
+
+    function updateStats() {
+        document.getElementById("tries").innerHTML = tries;
+        document.getElementById("wins").innerHTML = wins;
+        localStorage.setItem("tries", tries);
+        localStorage.setItem("wins", wins);
     }
     
     function makeCorrectMove() {
@@ -96,5 +145,8 @@ window.onload = async() => {
         onSnapbackEnd: onSnapbackEnd
     });
 
-    resetState();
+    let url = new URL(window.location.href);
+    let eco = url.searchParams.get("eco");
+    updateStats();
+    resetState(eco);
 };
