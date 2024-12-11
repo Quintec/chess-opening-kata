@@ -15,7 +15,7 @@ let tries = 0;
 let wins = 0;
 let whiteMove = true;
 
-function resetState(q_eco) {
+function resetState(q_eco, q_name) {
     reset = false;
     win = false;
     loss = false;
@@ -31,11 +31,20 @@ function resetState(q_eco) {
         eco = ecos[Math.floor(Math.random() * ecos.length)];
     }
 
+    if (q_name !== null) {
+        opening = openingDict[eco].find((o) => o[1] === q_name);
+        if (opening === undefined) {
+            opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
+        }
+    } else {
+        opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
+    }
+
     let url = new URL(window.location.href);
     url.searchParams.set("eco", eco);
+    url.searchParams.set("name", opening[1]);
     document.getElementById("share").href = url.href;
 
-    opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
     moves = PgnParser.parse(opening[2])[0].moves;
 
     document.getElementById("color").innerHTML = "⚪️";
@@ -202,6 +211,7 @@ window.onload = async() => {
 
     let url = new URL(window.location.href);
     let eco = url.searchParams.get("eco");
+    let name = url.searchParams.get("name");
     updateStats();
-    resetState(eco);
+    resetState(eco, name);
 };
