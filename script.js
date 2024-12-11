@@ -9,6 +9,7 @@ let openingDict = {};
 
 let reset = false;
 let win = false;
+let loss = false;
 
 let tries = 0;
 let wins = 0;
@@ -17,7 +18,10 @@ let whiteMove = true;
 function resetState(q_eco) {
     reset = false;
     win = false;
+    loss = false;
+
     whiteMove = true;
+
     game.reset();
     model_game.reset();
     board.start();
@@ -52,13 +56,14 @@ if (winsStr !== null) {
 }
 
 function onDrop(source, target, piece, newPos, oldPos, orientation) {
+    //console.log(source, target, piece, newPos, oldPos, orientation);
     let move = game.move({
         from: source,
         to: target,
         promotion: 'q'
     });
     if (move === null) return 'snapback';
-    let pass = makeCorrectMove(piece, target);
+    let pass = makeCorrectMove(source, target, piece, oldPos);
     if (!pass) {
         game.undo();
         reset = true;
@@ -75,7 +80,9 @@ function onSnapEnd() {
 
     if (win) {
         document.getElementById("status").innerHTML = "✅";
-        wins++;
+        if (!loss) {
+            wins++;
+        }
         tries++;
         updateStats();
         setTimeout(() => {
@@ -85,14 +92,22 @@ function onSnapEnd() {
 }
 
 function onSnapbackEnd() {
-    if (reset) {
+    if (reset && !loss) {
         document.getElementById("status").innerHTML = "❌";
         document.getElementById("pgn").innerHTML = opening[2];
         document.getElementById("pgn").style.color = "red";
-        document.getElementById("next").innerHTML = "<a>▶️</a>";
+        document.getElementById("next").innerHTML = "▶️";
         tries++;
+        loss = true;
         updateStats();
     }
+}
+
+function onDragStart (source, piece, position, orientation) {
+    if (loss || win) {
+      return false;
+    }
+    return true;
 }
 
 function updateStats() {
@@ -102,20 +117,41 @@ function updateStats() {
     localStorage.setItem("wins", wins);
 }
 
-function moveDataToStr(fig, pos) {
-    if (fig[1] === 'P') {
-        return pos;
+function moveDataToStr(source, target, piece, oldPos) {
+    if (piece[1] === 'K') {
+        if (source === "e1" && target === "g1") {
+            return "O-O";
+        } else if (source === "e1" && target === "c1") {
+            return "O-O-O";
+        } else if (source === "e8" && target === "g8") {
+            return "O-O";
+        } else if (source === "e8" && target === "c8") {
+            return "O-O-O";
+        }
+    } else if (piece[1] === 'P') {
+        if ((piece[0] === 'w' && target[1] === '6' && source[0] !== target[0] && oldPos[target[0] + '5'] === 'bP') ||
+            (piece[0] === 'b' && target[1] === '3' && source[0] !== target[0] && oldPos[target[0] + '4'] === 'wP')) {
+            return source[0] + "x" + target;
+        } else if (oldPos[target] === undefined) {
+            return target;
+        } else {
+            return source[0] + "x" + target;
+        }
     } else {
-        return fig[1] + pos;
+        if (oldPos[target] === undefined) {
+            return piece[1] + target;
+        } else {
+            return piece[1] + "x" + target;
+        }
     }
 }
 
-function makeCorrectMove(piece, newPos) {
-    console.log(moves);
+function makeCorrectMove(source, target, piece, oldPos) {
+    //console.log(moves);
     let currLen = moves.length;
     moves = moves.filter((move) => {
-        let moveData = moveDataToStr(piece, newPos);
-        return !(move.notation.notation === moveData && move.turn == piece[0].toLowerCase());
+        let moveData = moveDataToStr(source, target, piece, oldPos);
+        return !((move.notation.notation === moveData || move.notation.notation === moveData + "+") && move.turn == piece[0].toLowerCase());
     });
 
     if (currLen === moves.length) {
@@ -158,6 +194,7 @@ window.onload = async() => {
     board = Chessboard("board", {
         draggable: true,
         position: "start",
+        onDragStart: onDragStart,
         onDrop: onDrop,
         onSnapEnd: onSnapEnd,
         onSnapbackEnd: onSnapbackEnd
