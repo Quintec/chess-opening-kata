@@ -7,7 +7,7 @@
     <link rel="stylesheet"
       href="css/chessboard-1.0.0.min.css">
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
-    <link rel="prefetch" href="data/a.tsv">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"
     integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
     crossorigin="anonymous"></script>
@@ -16,14 +16,34 @@
     <script src="js/chess.min.js"></script>
 </head>
 <body style="text-align: center;">
+    <style>
+        .button-diff {
+            background: rgb(66, 184, 221);
+            color: white;
+            border-radius: 4px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+        .pure-button-active {
+          box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset,0 0 6px rgba(0,0,0,.37) inset;
+        }
+    </style>
     <script src="script.js"></script>
-    <h1 id="heading"><span id="color">⚪️</span><span id="name"></span><span id="status">❓</span></h1>
-    <div id="board" style="width: 600px; margin: auto;"></div>
-    <div id="stats" style="font-size: larger;">
+    <h2 id="heading" style="margin-bottom: 15px;"><span id="color">⚪️</span><span id="name"></span><span id="status">❓</span></h2>
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+      <label style="margin-right: 5px;">Difficulty:</label>
+      <div class="pure-button-group" role="group">
+        <button id="diff1" class="pure-button button-diff" onclick="setActive(this)">1</button>
+        <button id="diff2" class="pure-button button-diff" onclick="setActive(this)">2</button>
+        <button id="diff3" class="pure-button button-diff" onclick="setActive(this)">3</button>
+        <button id="diff4" class="pure-button button-diff" onclick="setActive(this)">4</button>
+        <button id="diff5" class="pure-button button-diff pure-button-active" onclick="setActive(this)">5</button>
+      </div>
+    </div>
+    <div id="board" style="width: 400px; margin: auto;"></div>
+    <div id="stats" style="font-size: large;">
       <p id="pgn-block"><span id="pgn"></span><span id="next" style="cursor: pointer" onclick="resetState()"></span></p>
       <p><b>Wins:</b> <span id="wins">0</span><br><b>Attempts:</b> <span id="tries">0</span></p>
-      <p><a id="share" href="/">Share (copy link)</a></p>
+      <p><a id="share" class="pure-button pure-button-primary" style="border-radius: 10px; font-size: 80%;" href="/">Share (copy link)</a></p>
     </div>
-    
 </body>
 </html>

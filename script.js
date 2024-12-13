@@ -13,7 +13,33 @@ let loss = false;
 
 let tries = 0;
 let wins = 0;
+let difficulty = 5;
+
 let whiteMove = true;
+
+function setActive(button) {
+    const buttons = document.querySelectorAll('.button-diff');
+    buttons.forEach(btn => btn.classList.remove('pure-button-active'));
+    button.classList.add('pure-button-active');
+    difficulty = parseInt(button.id[4]);
+    localStorage.setItem("difficulty", difficulty);
+}
+
+function getRandomOpening() {
+    let ecos = Object.keys(openingDict);
+    let eco = ecos[Math.floor(Math.random() * ecos.length)];
+    while (eco === 'eco') {
+        eco = ecos[Math.floor(Math.random() * ecos.length)];
+    }
+    let openings = openingDict[eco];
+    // filter openings by length from difficulty
+    openings = openings.filter((o) => PgnParser.parse(o[2])[0].moves.length <= difficulty * 4);
+    if (openings.length === 0) {
+        return getRandomOpening();
+    }
+    return openings[Math.floor(Math.random() * openings.length)];
+}
+
 
 function resetState(q_eco, q_name) {
     reset = false;
@@ -34,10 +60,10 @@ function resetState(q_eco, q_name) {
     if (q_name !== null) {
         opening = openingDict[eco].find((o) => o[1] === q_name);
         if (opening === undefined) {
-            opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
+            opening = getRandomOpening();
         }
     } else {
-        opening = openingDict[eco][Math.floor(Math.random() * openingDict[eco].length)];
+        opening = getRandomOpening();
     }
 
     let url = new URL(window.location.href);
@@ -62,6 +88,10 @@ if (triesStr !== null) {
 let winsStr = localStorage.getItem("wins");
 if (winsStr !== null) {
     wins = parseInt(winsStr);
+}
+let difficultyStr = localStorage.getItem("difficulty");
+if (difficultyStr !== null) {
+    difficulty = parseInt(difficultyStr);
 }
 
 function onDrop(source, target, piece, newPos, oldPos, orientation) {
@@ -213,5 +243,6 @@ window.onload = async() => {
     let eco = url.searchParams.get("eco");
     let name = url.searchParams.get("name");
     updateStats();
+    setActive(document.getElementById("diff" + difficulty));
     resetState(eco, name);
 };
